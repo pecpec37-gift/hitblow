@@ -71,6 +71,40 @@
     background:var(--hit);color:#fff;border:none;border-radius:11px;cursor:pointer;
     font-family:inherit;
   }
+  .learn{
+    width:100%;margin-top:10px;padding:15px;font-size:15px;font-weight:700;letter-spacing:.06em;
+    background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:11px;
+    cursor:pointer;font-family:inherit;
+  }
+  .learn:active{background:#efe8d8;}
+
+  /* learn section */
+  .learnhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .learntitle{
+    font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:24px;font-weight:800;letter-spacing:.04em;
+  }
+  .lclose{
+    font-family:inherit;font-size:12px;font-weight:700;color:var(--muted);
+    background:transparent;border:1px solid var(--line);border-radius:99px;padding:6px 12px;cursor:pointer;
+  }
+  .lclose:active{background:#efe8d8;}
+  .lintro{font-size:13.5px;line-height:1.8;color:var(--muted);margin-bottom:16px;}
+  .tip{display:flex;gap:12px;padding:14px 0;border-top:1px solid #eae1cd;}
+  .tipno{
+    flex:none;width:28px;height:28px;border-radius:50%;background:var(--hit);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+    font-family:"Yu Mincho",serif;margin-top:2px;
+  }
+  .tiph{font-size:15px;font-weight:800;margin-bottom:5px;letter-spacing:.02em;}
+  .tipbody p{margin:0;font-size:13px;line-height:1.85;color:#4a4335;}
+  .tipbody b{color:var(--ink);}
+  .lsummary{
+    margin:16px 0 4px;padding:14px;border-radius:10px;
+    background:rgba(184,137,43,.1);border:1px solid var(--gold);
+    font-size:13px;line-height:1.8;color:#4a4335;
+  }
+  .lsummary b{color:var(--gold);}
+  #learnStart{margin-top:16px;}
 
   /* game top bar */
   .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
@@ -213,6 +247,83 @@
       <button data-n="4">4桁</button>
     </div>
     <button class="start" id="startBtn">ゲーム開始</button>
+    <button class="learn" id="learnBtn">📖 学習メニュー（攻略のコツ）</button>
+  </section>
+
+  <!-- LEARN -->
+  <section class="card hidden" id="learn">
+    <div class="learnhead">
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px;">学習メニュー</div>
+        <div class="learntitle">攻略のコツ</div>
+      </div>
+      <button class="lclose" id="learnClose">閉じる ✕</button>
+    </div>
+
+    <div class="lintro">
+      ヒット＆ブローは「運」ではなく「消去法」のゲームです。返ってきた H と B を毎回きちんと整理すれば、7回あれば十分に絞り込めます。ポイントを段階ごとにまとめました。
+    </div>
+
+    <div class="tip">
+      <div class="tipno">1</div>
+      <div class="tipbody">
+        <div class="tiph">まずは基本の意味を押さえる</div>
+        <p><b>Hit（H）</b>＝数字も位置も合っている。<b>Blow（B）</b>＝その数字は秘密の中にあるが、場所が違う。<br>
+        大事なのは <b>H＋B の合計</b>。これは「宣言した3つのうち、正解に含まれる数字が何個あったか」を表します。位置は分からなくても、"どの数字が当たりか" の手がかりになります。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tipno">2</div>
+      <div class="tipbody">
+        <div class="tiph">最初の1〜2手は「情報集め」に使う</div>
+        <p>いきなり正解を狙う必要はありません。序盤は <b>できるだけ多くの数字を試す</b> のが得。<br>
+        例：1手目「<b>012</b>」→ 2手目「<b>345</b>」→ 3手目「<b>678</b>」のように振れば、3手で 0〜8 の9個をチェックでき、どの数字が「使われている／いない」かがほぼ分かります。残りは 9 かどうかだけ。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tipno">3</div>
+      <div class="tipbody">
+        <div class="tiph">「合計0」の宣言は超・重要な手がかり</div>
+        <p>H＋B が <b>0</b> だったら、その3つの数字は <b>すべて正解に含まれない</b>。一気に3個を候補から外せます。<br>
+        逆に H＋B＝3 なら、その3つが <b>まさに正解の数字</b>（あとは並び順だけ）。除外できた数字はメモから消して、候補を狭めていきましょう。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tipno">4</div>
+      <div class="tipbody">
+        <div class="tiph">当たり数字が分かったら「位置」を詰める</div>
+        <p>使う数字が確定したら、次は並べ替えで位置を特定します。コツは <b>2つだけ入れ替えて宣言する</b> こと。<br>
+        例：「<b>725</b>」で 1H2B（1個は位置も正解、2個は数字だけ正解）なら、7と2の位置を入れ替えて「<b>275</b>」を試す。H が増えれば入れ替えが正解方向、減れば元が正しかった、と1手ごとに位置が確定していきます。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tipno">5</div>
+      <div class="tipbody">
+        <div class="tiph">毎回、確定した情報をメモ代わりに整理</div>
+        <p>頭の中でよいので、宣言のたびに次の3つを更新しましょう。<br>
+        ①<b>使われている数字</b>（確定・候補）／②<b>使われていない数字</b>（除外）／③<b>各桁に入らないと分かった数字</b>。<br>
+        「この桁に7は入らない」といった否定情報も、積み重なると答えを一つに絞り込む決め手になります。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tipno">6</div>
+      <div class="tipbody">
+        <div class="tiph">時間配分で高得点を狙う</div>
+        <p>残り秒数がそのままポイント。ただし焦って当てずっぽうを撃つと候補が絞れず逆効果です。<br>
+        <b>序盤は少し時間をかけて情報を集め、中盤以降は一気に決める</b> のが理想。数字が確定してからは迷わず入れ替えを試すと、時間を残したまま正解に届きます。</p>
+      </div>
+    </div>
+
+    <div class="lsummary">
+      <b>まとめ：</b>「たくさんの数字を試す → 合計H+Bで当たり数字を確定 → 入れ替えで位置を詰める」。この3ステップを意識するだけで、勝率も得点も大きく変わります。
+    </div>
+
+    <button class="start" id="learnStart">このコツで挑戦する →</button>
   </section>
 
   <!-- GAME -->
@@ -283,6 +394,22 @@
   });
 
   $('startBtn').addEventListener('click', startGame);
+
+  // 学習メニュー
+  $('learnBtn').addEventListener('click', function(){
+    $('setup').classList.add('hidden');
+    $('learn').classList.remove('hidden');
+    window.scrollTo(0,0);
+  });
+  $('learnClose').addEventListener('click', function(){
+    $('learn').classList.add('hidden');
+    $('setup').classList.remove('hidden');
+    window.scrollTo(0,0);
+  });
+  $('learnStart').addEventListener('click', function(){
+    $('learn').classList.add('hidden');
+    startGame();
+  });
   $('againBtn').addEventListener('click', function(){
     $('over').classList.remove('show');
     $('reveal').classList.remove('show');
