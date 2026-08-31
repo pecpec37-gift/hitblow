@@ -158,11 +158,33 @@
     font-family:"Yu Mincho",serif;font-size:52px;font-weight:800;color:var(--gold);line-height:1;
   }
   .modal .score .ptlbl{font-size:12px;letter-spacing:.3em;color:var(--muted);}
-  .modal .ans{font-size:15px;color:var(--muted);margin-bottom:20px;}
-  .modal .ans b{font-family:"Yu Mincho",serif;font-size:26px;color:var(--ink);letter-spacing:.14em;}
+  .modal .ans{font-size:14px;color:var(--muted);margin-bottom:8px;}
+  .modal .answer{display:flex;gap:8px;justify-content:center;margin-bottom:22px;}
+  .modal .answer .d{
+    width:46px;height:56px;border-radius:10px;background:var(--ink);color:#fbf7ee;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Yu Mincho",serif;font-size:30px;font-weight:800;
+  }
+  .modalbtns{display:flex;flex-direction:column;gap:9px;}
   .modal button{
     width:100%;padding:15px;font-size:16px;font-weight:800;letter-spacing:.1em;
     background:var(--ink);color:#fbf7ee;border:none;border-radius:11px;cursor:pointer;font-family:inherit;
+  }
+  .modal button.ghost{
+    background:transparent;color:var(--ink);border:1.5px solid var(--line);
+  }
+  .modal button.ghost:active{background:#efe8d8;}
+
+  /* 振り返り時に盤面上部へ出す正解表示 */
+  .reveal{
+    display:none;align-items:center;gap:10px;justify-content:center;
+    background:rgba(184,137,43,.1);border:1px solid var(--gold);
+    border-radius:10px;padding:9px 12px;margin-bottom:12px;
+  }
+  .reveal.show{display:flex;}
+  .reveal .lbl{font-size:12px;color:var(--muted);letter-spacing:.1em;}
+  .reveal .num{
+    font-family:"Yu Mincho",serif;font-size:24px;font-weight:800;letter-spacing:.16em;color:var(--gold);
   }
   .hidden{display:none!important;}
 </style>
@@ -201,6 +223,10 @@
     </div>
     <div class="track"><i id="trackFill"></i></div>
 
+    <div class="reveal" id="reveal">
+      <span class="lbl">正解</span><span class="num" id="revealNum"></span>
+    </div>
+
     <div class="display" id="display"></div>
     <div class="hint" id="hint">マスを選んで数字を入力できます</div>
 
@@ -225,8 +251,12 @@
     <div class="tag" id="mtag">RESULT</div>
     <h3 id="mtitle">勝利</h3>
     <div class="score hidden" id="mscore"><span class="pt" id="mpt">0</span><span class="ptlbl">POINT</span></div>
-    <p class="ans">秘密の数字は <b id="mans">725</b> でした</p>
-    <button id="againBtn">もう一度あそぶ</button>
+    <p class="ans">秘密の数字は</p>
+    <div class="answer" id="manswer"></div>
+    <div class="modalbtns">
+      <button id="reviewBtn" class="ghost">履歴を振り返る</button>
+      <button id="againBtn">もう一度あそぶ</button>
+    </div>
   </div>
 </div>
 
@@ -255,8 +285,15 @@
   $('startBtn').addEventListener('click', startGame);
   $('againBtn').addEventListener('click', function(){
     $('over').classList.remove('show');
+    $('reveal').classList.remove('show');
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
+  });
+  // 履歴を振り返る：結果画面を閉じ、盤面に正解を出したまま記録を確認できる
+  $('reviewBtn').addEventListener('click', function(){
+    $('over').classList.remove('show');
+    $('revealNum').textContent = secret.join('');
+    $('reveal').classList.add('show');
   });
 
   function makeSecret(){
@@ -280,6 +317,8 @@
     resetInput();
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
+    $('reveal').classList.remove('show');
+    [].forEach.call($('pad').querySelectorAll('button'), function(btn){ btn.disabled=false; });
     $('rows').innerHTML='';
     $('left').textContent = MAX_TRIES;
     buildDisplay();
@@ -415,6 +454,7 @@
 
   function finish(win){
     stopTimer();
+    lockPad();
     var m=$('modal');
     m.classList.toggle('win', win);
     $('mtag').textContent = win?'CLEAR':'GAME OVER';
@@ -426,8 +466,19 @@
     }else{
       $('mscore').classList.add('hidden');
     }
-    $('mans').textContent = secret.join('');
+    // 正解を各桁ごとに表示
+    var box=$('manswer'); box.innerHTML='';
+    for(var i=0;i<secret.length;i++){
+      var d=document.createElement('div');
+      d.className='d'; d.textContent=secret[i];
+      box.appendChild(d);
+    }
     $('over').classList.add('show');
+  }
+
+  // ゲーム終了後は入力を無効化（振り返り中に誤操作しない）
+  function lockPad(){
+    [].forEach.call($('pad').querySelectorAll('button'), function(btn){ btn.disabled=true; });
   }
 })();
 </script>
