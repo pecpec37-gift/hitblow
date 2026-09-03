@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ヒット＆ブロー推理道場</title>
+<!-- 対戦モード共有ライブラリ -->
+<script src="https://pecpec37-gift.github.io/portal/battle.js"></script>
 <style>
   :root{
     --ink:#12233b;
@@ -221,6 +223,26 @@
     font-family:"Yu Mincho",serif;font-size:24px;font-weight:800;letter-spacing:.16em;color:var(--gold);
   }
   .hidden{display:none!important;}
+
+  /* ===== 対戦モード：開始カウントダウン ===== */
+  #btGoOverlay{
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(18,35,59,.94);color:#fbf7ee;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:20px;
+  }
+  #btGoOverlay.show{display:flex;}
+  #btGoInfo{
+    font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+    font-weight:800;font-size:22px;letter-spacing:.04em;
+    margin-bottom:18px;color:var(--gold);
+  }
+  #btGoNum{
+    font-family:"Yu Mincho",serif;font-weight:800;font-size:96px;line-height:1;
+    color:#fff;animation:btgo 1s infinite;
+  }
+  #btGoLabel{font-size:12px;letter-spacing:.2em;color:rgba(251,247,238,.6);margin-top:16px;}
+  @keyframes btgo{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.14);opacity:.6;}}
 </style>
 </head>
 <body>
@@ -366,9 +388,17 @@
     <div class="answer" id="manswer"></div>
     <div class="modalbtns">
       <button id="reviewBtn" class="ghost">履歴を振り返る</button>
+      <button id="battleResultBtn" class="hidden">⚔️ 対戦結果を見る</button>
       <button id="againBtn">もう一度あそぶ</button>
     </div>
   </div>
+</div>
+
+<!-- 対戦モード：開始カウントダウン -->
+<div id="btGoOverlay">
+  <div id="btGoInfo">🔢 ヒット＆ブロー推理道場で対戦！</div>
+  <div id="btGoNum">3</div>
+  <div id="btGoLabel">まもなく開始します</div>
 </div>
 
 <script>
@@ -586,8 +616,8 @@
     m.classList.toggle('win', win);
     $('mtag').textContent = win?'CLEAR':'GAME OVER';
     $('mtitle').textContent = win?'正解！':'残念…';
+    var pts = win ? Math.max(0, remaining) : 0;   // 残り秒数＝獲得ポイント（未クリアは0）
     if(win){
-      var pts = Math.max(0, remaining);   // 残り秒数＝獲得ポイント
       $('mpt').textContent = pts;
       $('mscore').classList.remove('hidden');
     }else{
@@ -600,6 +630,16 @@
       d.className='d'; d.textContent=secret[i];
       box.appendChild(d);
     }
+
+    // 対戦モード：スコアをポータルへ送信し、対戦結果ボタンに切り替える
+    if(window.__BATTLE && window.__BATTLE.active && window.TomyBattle){
+      var detail = N + '桁 ・ ' + (win ? (tries+1) + '手で正解' : '未クリア');
+      try{ TomyBattle.submitScore(window.__BATTLE.matchId, pts, detail); }catch(e){}
+      var _brb=$('battleResultBtn'); if(_brb) _brb.classList.remove('hidden');
+      var _agb=$('againBtn');        if(_agb) _agb.classList.add('hidden');
+      var _rvb=$('reviewBtn');       if(_rvb) _rvb.classList.add('hidden');
+    }
+
     $('over').classList.add('show');
   }
 
@@ -607,6 +647,51 @@
   function lockPad(){
     [].forEach.call($('pad').querySelectorAll('button'), function(btn){ btn.disabled=true; });
   }
+
+  /* ===== 対戦モード（ポータルから ?battle=1 で遷移してくる） ===== */
+  window.__BATTLE = null;
+
+  function goBattleResult(){
+    var mid = (window.__BATTLE && window.__BATTLE.matchId) || '';
+    location.href = 'https://pecpec37-gift.github.io/portal/?battleResult=' + encodeURIComponent(mid);
+  }
+  var _battleBtn = $('battleResultBtn');
+  if(_battleBtn) _battleBtn.addEventListener('click', goBattleResult);
+
+  function __initBattle(){
+    var p; try{ p = new URLSearchParams(location.search); }catch(e){ return; }
+    if(p.get('battle') !== '1') return;
+    var matchId = p.get('match'), genreId = p.get('genre'), nm = p.get('name');
+    if(!matchId) return;
+
+    window.__BATTLE = { active:true, matchId:matchId };
+    if(nm && window.TomyBattle){ try{ TomyBattle.setName(nm); }catch(e){} }
+
+    // ジャンル（桁数）を反映：d4 → 4桁、それ以外 → 3桁
+    N = (genreId === 'd4') ? 4 : 3;
+    try{
+      [].forEach.call($('digitsel').children, function(c){
+        c.classList.toggle('on', parseInt(c.dataset.n,10) === N);
+      });
+    }catch(e){}
+
+    function beginBattle(){ startGame(); }
+
+    var ov = $('btGoOverlay'), num = $('btGoNum'), info = $('btGoInfo');
+    // オーバーレイが無くてもゲームは必ず開始する（保険）
+    if(!ov || !num || !info){ beginBattle(); return; }
+    info.textContent = '🔢 ヒット＆ブロー推理道場で対戦！（' + N + '桁）';
+    ov.classList.add('show');
+    var n = 3; num.textContent = n;
+    var t = setInterval(function(){
+      n--;
+      if(n <= 0){ clearInterval(t); ov.classList.remove('show'); beginBattle(); }
+      else { num.textContent = n; }
+    }, 1000);
+  }
+
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', __initBattle); }
+  else { __initBattle(); }
 })();
 </script>
 </body>
