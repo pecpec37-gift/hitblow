@@ -222,6 +222,13 @@
   .reveal .num{
     font-family:"Yu Mincho",serif;font-size:24px;font-weight:800;letter-spacing:.16em;color:var(--gold);
   }
+  /* 振り返り画面の「もう一度あそぶ」 */
+  #reviewAgainBtn{
+    width:100%;margin-top:16px;padding:16px;
+    font-size:16px;font-weight:800;letter-spacing:.1em;font-family:inherit;
+    background:var(--hit);color:#fff;border:none;border-radius:11px;cursor:pointer;
+  }
+  #reviewAgainBtn:active{filter:brightness(.94);}
   .hidden{display:none!important;}
 
   /* ===== 対戦モード：開始カウントダウン ===== */
@@ -376,6 +383,8 @@
       <h2>推理の記録</h2>
       <div id="rows"></div>
     </div>
+
+    <button id="reviewAgainBtn" class="hidden">もう一度あそぶ</button>
   </section>
 </div>
 
@@ -412,6 +421,7 @@
   var active = 0;          // 現在選択中のスロット位置
   var timerId = null;
   var remaining = TIME;
+  var gameOver = false;    // ゲーム終了（振り返り）中フラグ
 
   var $ = function(id){ return document.getElementById(id); };
 
@@ -440,18 +450,24 @@
     $('learn').classList.add('hidden');
     startGame();
   });
-  $('againBtn').addEventListener('click', function(){
+  function backToSetup(){
     $('over').classList.remove('show');
     $('reveal').classList.remove('show');
+    $('reviewAgainBtn').classList.add('hidden');
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
-  });
+  }
+  $('againBtn').addEventListener('click', backToSetup);
   // 履歴を振り返る：結果画面を閉じ、盤面に正解を出したまま記録を確認できる
   $('reviewBtn').addEventListener('click', function(){
     $('over').classList.remove('show');
     $('revealNum').textContent = secret.join('');
     $('reveal').classList.add('show');
+    // 振り返ったあとにそのまま再挑戦できるよう「もう一度あそぶ」を表示
+    $('reviewAgainBtn').classList.remove('hidden');
   });
+  // 振り返り画面からの「もう一度あそぶ」
+  $('reviewAgainBtn').addEventListener('click', backToSetup);
 
   function makeSecret(){
     var pool = [0,1,2,3,4,5,6,7,8,9];
@@ -471,10 +487,12 @@
   function startGame(){
     secret = makeSecret();
     tries = 0;
+    gameOver = false;
     resetInput();
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('reveal').classList.remove('show');
+    $('reviewAgainBtn').classList.add('hidden');
     [].forEach.call($('pad').querySelectorAll('button'), function(btn){ btn.disabled=false; });
     $('rows').innerHTML='';
     $('left').textContent = MAX_TRIES;
@@ -493,10 +511,13 @@
     }
   }
 
-  // スロットをタップして入力位置を選ぶ
+  // スロットをタップ：空マスなら入力位置を選択、入力済みならその数字を消す
   $('display').addEventListener('click', function(e){
     var s = e.target.closest('.slot'); if(!s) return;
-    active = parseInt(s.dataset.pos,10);
+    if(gameOver) return;                    // 振り返り中は編集しない
+    var pos = parseInt(s.dataset.pos,10);
+    if(input[pos]!==null){ input[pos] = null; }  // 入力済みの数字を消す
+    active = pos;
     renderInput();
   });
 
@@ -612,6 +633,7 @@
   function finish(win){
     stopTimer();
     lockPad();
+    gameOver = true;
     var m=$('modal');
     m.classList.toggle('win', win);
     $('mtag').textContent = win?'CLEAR':'GAME OVER';
